@@ -1,3 +1,6 @@
+> [!Warning]
+> **Repository moved!** This repo is **archived** and no longer updated. All future development happens here https://github.com/bw-design-group/ignition-project-scan-endpoint
+
 # Project Scan Endpoint Module
 
 This module provides a REST endpoint for triggering a project scan in Ignition. It allows you to initiate a project scan programmatically by sending a POST request to the specified endpoint.
