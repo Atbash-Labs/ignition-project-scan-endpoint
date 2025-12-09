@@ -1,0 +1,14 @@
+plugins {
+    id "java-library"
+}
+
+sourceCompatibility = JavaVersion.VERSION_11  // Ensure this matches the JDK you are using
+targetCompatibility = JavaVersion.VERSION_11
+
+dependencies {
+
+	api(project(":common"))
+
+    compileOnly("com.inductiveautomation.ignitionsdk:ignition-common:${sdk_version}")
+    compileOnly("com.inductiveautomation.ignitionsdk:gateway-api:${sdk_version}")
+}
