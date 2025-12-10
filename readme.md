@@ -1,6 +1,6 @@
 # Project Scan Endpoint Module
 
-This module provides a REST endpoint for triggering a project scan in Ignition 8.1. It allows you to initiate a project scan programmatically by sending a POST request to the specified endpoint.
+This module provides a REST endpoint for triggering a project scan in Ignition. It allows you to initiate a project scan programmatically by sending a POST request to the specified endpoint.
 
 ## API Endpoint
 
