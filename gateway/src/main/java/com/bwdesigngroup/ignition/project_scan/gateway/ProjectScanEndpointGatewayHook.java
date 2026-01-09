@@ -1,15 +1,18 @@
 package com.bwdesigngroup.ignition.project_scan.gateway;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bwdesigngroup.ignition.project_scan.gateway.web.routes.ProjectScanRoutes;
 import com.bwdesigngroup.ignition.project_scan.common.ProjectScanConstants;
 import com.inductiveautomation.ignition.common.licensing.LicenseState;
-import com.inductiveautomation.ignition.gateway.clientcomm.ClientReqSession;
 import com.inductiveautomation.ignition.gateway.dataroutes.RouteGroup;
 import com.inductiveautomation.ignition.gateway.model.AbstractGatewayModuleHook;
 import com.inductiveautomation.ignition.gateway.model.GatewayContext;
+import com.inductiveautomation.ignition.gateway.rpc.GatewayRpcImplementation;
+import com.inductiveautomation.ignition.common.rpc.proto.ProtoRpcSerializer;
 
 
 /**
@@ -55,6 +58,7 @@ public class ProjectScanEndpointGatewayHook extends AbstractGatewayModuleHook {
      */
     @Override
 	public void mountRouteHandlers(RouteGroup routes) {
+    routes.addOpenApiGroup("project-scan-endpoint", "Project Scan Endpoint");
 		new ProjectScanRoutes(context, routes).mountRoutes();
 	}
 
@@ -68,8 +72,11 @@ public class ProjectScanEndpointGatewayHook extends AbstractGatewayModuleHook {
     }
 
     @Override
-    public Object getRPCHandler(ClientReqSession session, String projectName) {
-        logger.debug("Creating RPC Handler for session: " + session.getId() + ", project: " + projectName);
-        return new ProjectScanRPCHandler(context);
+    public Optional<GatewayRpcImplementation> getRpcImplementation() {
+        logger.info("Registering RPC implementation for Project Scan");
+        return Optional.of(GatewayRpcImplementation.of(
+            ProtoRpcSerializer.DEFAULT_INSTANCE,
+            new ProjectScanRPCHandler(context)
+        ));
     }
 }

@@ -5,7 +5,8 @@ import com.inductiveautomation.ignition.designer.model.DesignerContext;
 import com.inductiveautomation.ignition.common.gson.JsonObject;
 import com.inductiveautomation.ignition.common.gson.Gson;
 import com.inductiveautomation.ignition.common.util.LoggerEx;
-import com.inductiveautomation.ignition.client.gateway_interface.ModuleRPCFactory;
+import com.inductiveautomation.ignition.common.rpc.proto.ProtoRpcSerializer;
+import com.inductiveautomation.ignition.client.gateway_interface.GatewayConnection;
 import com.bwdesigngroup.ignition.project_scan.common.ProjectScanConstants;
 import com.bwdesigngroup.ignition.project_scan.common.ProjectScanRPC;
 import com.bwdesigngroup.ignition.project_scan.designer.ProjectScanEndpointDesignerHook;
@@ -36,7 +37,10 @@ public class ProjectScanAction extends BaseAction {
             protected Void doInBackground() throws Exception {
                 try {
                     logger.debug("Creating RPC interface");
-                    ProjectScanRPC rpc = ModuleRPCFactory.create(
+                    // SDK 8.3+ uses GatewayConnection.getRpcInterface() as a static method
+                    // Second parameter is MODULE ID, not packageId!
+                    ProjectScanRPC rpc = GatewayConnection.getRpcInterface(
+                        ProtoRpcSerializer.DEFAULT_INSTANCE,
                         ProjectScanConstants.MODULE_ID,
                         ProjectScanRPC.class
                     );

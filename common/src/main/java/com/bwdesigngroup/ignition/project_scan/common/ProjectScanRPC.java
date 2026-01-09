@@ -1,8 +1,9 @@
 package com.bwdesigngroup.ignition.project_scan.common;
 
-/**
- * RPC interface for project scanning functionality
- */
+import com.inductiveautomation.ignition.common.rpc.RpcInterface;
+import com.bwdesigngroup.ignition.project_scan.common.ProjectScanConstants;
+
+@RpcInterface(packageId = ProjectScanConstants.MODULE_ID)
 public interface ProjectScanRPC {
     /**
      * Triggers a project scan on the gateway

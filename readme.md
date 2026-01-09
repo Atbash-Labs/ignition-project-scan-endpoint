@@ -2,7 +2,24 @@
 
 This module provides a REST endpoint for triggering a project scan in Ignition. It allows you to initiate a project scan programmatically by sending a POST request to the specified endpoint.
 
+## Version Compatibility
+
+**Important:** This module has different versions for different Ignition SDK releases:
+
+- **Version 1.0.0 and above**: Compatible with Ignition SDK 8.3+
+- **Versions below 1.0.0**: Compatible with Ignition SDK 8.1
+
 ## API Endpoint
+
+### Authentication
+
+All REST endpoints require an API token with gateway READ permission. Requests must include the following header:
+
+```
+X-Ignition-API-Token: {api_token}
+```
+
+Where `{api_token}` is your Ignition gateway API token with READ permission.
 
 ### Trigger Project Scan
 
@@ -19,7 +36,10 @@ This endpoint triggers a project scan when called.
 #### Example Usage
 
 ```sh
-curl -X POST -H "Content-Type: application/json" https://project-scan.localtest.me/data/project-scan-endpoint/scan?updateDesigners=true&forceUpdate=true
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "X-Ignition-API-Token: your_api_token_here" \
+  https://project-scan.localtest.me/data/project-scan-endpoint/scan?updateDesigners=true&forceUpdate=true
 ```
 
 #### Response
@@ -35,7 +55,8 @@ This endpoint allows you to check if the gateway supports the project scan funct
 #### Example Usage
 
 ```sh
-curl http://localhost:8088/data/project-scan-endpoint/confirm-support
+curl -H "X-Ignition-API-Token: your_api_token_here" \
+  http://localhost:8088/data/project-scan-endpoint/confirm-support
 ```
 
 #### Response

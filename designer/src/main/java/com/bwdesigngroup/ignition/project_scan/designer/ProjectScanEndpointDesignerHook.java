@@ -16,7 +16,7 @@ import com.jidesoft.action.CommandBar;
 import com.inductiveautomation.ignition.designer.IgnitionDesigner;
 import com.inductiveautomation.ignition.designer.gui.DesignerToolbar;
 import com.inductiveautomation.ignition.common.BundleUtil;
-import com.inductiveautomation.ignition.common.gateway.messages.PushNotification;
+import com.inductiveautomation.ignition.common.gson.JsonObject;
 import com.bwdesigngroup.ignition.project_scan.common.ProjectScanConstants;
 import com.bwdesigngroup.ignition.project_scan.designer.actions.ProjectScanAction;
 import com.bwdesigngroup.ignition.project_scan.designer.browser.ProjectBrowserStateManager;
@@ -40,24 +40,26 @@ public class ProjectScanEndpointDesignerHook extends AbstractDesignerModuleHook 
         BundleUtil.get().addBundle("projectscan", this.getClass(), "designer");
 
         browserStateManager = new ProjectBrowserStateManager(context);
-        
+
         ProjectScanEndpointDesignerHook.pushNotificationListener = new DesignerPushNotificationListener(designer) {
             @Override
-            public void receive(PushNotification notification) {
-                if (notification.getMessageType().equals(ProjectScanConstants.DESIGNER_SCAN_NOTIFICATION_ID)) {
-                    browserStateManager.captureState();
-                    super.receive(notification);
-                    // Give the UI a moment to update
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        logger.error("Sleep interrupted", e);
-                    }
-                    browserStateManager.restoreState();
+            public void receiveNotification(JsonObject message) {
+                browserStateManager.captureState();
+                super.receiveNotification(message);
+                // Give the UI a moment to update
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    logger.error("Sleep interrupted", e);
                 }
+                browserStateManager.restoreState();
             }
         };
-        gatewayConnection.addPushNotificationListener(pushNotificationListener);
+
+        gatewayConnection.addPushNotificationListener(
+            pushNotificationListener,
+            new JsonObjectDeserializer()
+        );
     }
 
     @Override

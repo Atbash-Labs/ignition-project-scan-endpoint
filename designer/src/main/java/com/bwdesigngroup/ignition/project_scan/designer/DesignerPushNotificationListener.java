@@ -3,38 +3,40 @@ package com.bwdesigngroup.ignition.project_scan.designer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.inductiveautomation.ignition.common.gateway.messages.PushNotification;
 import com.inductiveautomation.ignition.common.gson.JsonObject;
-import com.inductiveautomation.ignition.common.gson.Gson;
-import com.inductiveautomation.ignition.client.gateway_interface.FilteredPushNotificationListener;
+import com.inductiveautomation.ignition.client.gateway_interface.PushNotificationListener;
 import com.inductiveautomation.ignition.designer.IgnitionDesigner;
 import com.bwdesigngroup.ignition.project_scan.designer.dialog.ConfirmationDialog;
 import com.bwdesigngroup.ignition.project_scan.common.ProjectScanConstants;
 
-public class DesignerPushNotificationListener extends FilteredPushNotificationListener {
+/**
+ * Push notification listener for designer project scan updates.
+ * SDK 8.3+ requires implementing PushNotificationListener<T> directly.
+ */
+public class DesignerPushNotificationListener implements PushNotificationListener<JsonObject> {
     private final Logger logger = LoggerFactory
             .getLogger(ProjectScanConstants.MODULE_ID + ".designerPushNotificationListener");
-    private final IgnitionDesigner designer;
-    private final Gson gson = new Gson();
+    protected final IgnitionDesigner designer;
     private volatile boolean isDialogShowing = false;
     private volatile boolean pendingForceUpdate = false;
 
     public DesignerPushNotificationListener(IgnitionDesigner designer) {
-        super(ProjectScanConstants.MODULE_ID, new String[] { ProjectScanConstants.DESIGNER_SCAN_NOTIFICATION_ID });
         this.designer = designer;
     }
 
     @Override
-    public synchronized void receive(PushNotification notification) {
-        logger.info("Received push notification: " + notification.getMessageType());
+    public String moduleId() {
+        return ProjectScanConstants.MODULE_ID;
+    }
 
-        if (!notification.getMessageType().equals(ProjectScanConstants.DESIGNER_SCAN_NOTIFICATION_ID)) {
-            return;
-        }
+    @Override
+    public String messageType() {
+        return ProjectScanConstants.DESIGNER_SCAN_NOTIFICATION_ID;
+    }
 
-        // Parse the notification message
-        Object notificationMessage = notification.getMessage();
-        JsonObject notificationData = gson.fromJson(notificationMessage.toString(), JsonObject.class);
+    @Override
+    public synchronized void receiveNotification(JsonObject notificationData) {
+        logger.info("Received push notification for project scan");
         boolean forceUpdate = notificationData != null && notificationData.has("forceUpdate")
                 && notificationData.get("forceUpdate").getAsBoolean();
 
