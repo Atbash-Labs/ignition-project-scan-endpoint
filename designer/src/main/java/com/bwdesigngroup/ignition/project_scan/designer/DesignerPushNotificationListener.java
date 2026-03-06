@@ -4,12 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.inductiveautomation.ignition.common.gson.JsonObject;
-import com.inductiveautomation.ignition.common.resourcecollection.ChangeOperation;
-import com.inductiveautomation.ignition.common.resourcecollection.Resource;
 import com.inductiveautomation.ignition.client.gateway_interface.PushNotificationListener;
 import com.inductiveautomation.ignition.designer.IgnitionDesigner;
-import com.inductiveautomation.ignition.designer.model.DesignerContext;
-import com.inductiveautomation.ignition.designer.project.DesignableProject;
 import com.bwdesigngroup.ignition.project_scan.designer.dialog.ConfirmationDialog;
 import com.bwdesigngroup.ignition.project_scan.common.ProjectScanConstants;
 
@@ -21,13 +17,11 @@ public class DesignerPushNotificationListener implements PushNotificationListene
     private final Logger logger = LoggerFactory
             .getLogger(ProjectScanConstants.MODULE_ID + ".designerPushNotificationListener");
     protected final IgnitionDesigner designer;
-    protected final DesignerContext context;
     private volatile boolean isDialogShowing = false;
     private volatile boolean pendingForceUpdate = false;
 
-    public DesignerPushNotificationListener(IgnitionDesigner designer, DesignerContext context) {
+    public DesignerPushNotificationListener(IgnitionDesigner designer) {
         this.designer = designer;
-        this.context = context;
     }
 
     @Override
@@ -70,20 +64,7 @@ public class DesignerPushNotificationListener implements PushNotificationListene
 
         try {
             if (pendingForceUpdate) {
-                logger.debug("Performing force update — discarding local changes first");
-                try {
-                    DesignableProject project = context.getProject();
-                    if (project != null) {
-                        for (ChangeOperation change : project.getChanges()) {
-                            Resource resource = ChangeOperation.getResourceFromChange(change);
-                            if (resource != null) {
-                                project.discardChanges(resource.getResourcePath());
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.warn("Failed to discard local changes before force update", e);
-                }
+                logger.debug("Performing force update");
                 this.designer.updateProject();
             } else {
                 if (showDialog()) {

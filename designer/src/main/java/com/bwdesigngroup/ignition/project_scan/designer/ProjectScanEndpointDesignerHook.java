@@ -41,7 +41,7 @@ public class ProjectScanEndpointDesignerHook extends AbstractDesignerModuleHook 
 
         browserStateManager = new ProjectBrowserStateManager(context);
 
-        ProjectScanEndpointDesignerHook.pushNotificationListener = new DesignerPushNotificationListener(designer, context) {
+        ProjectScanEndpointDesignerHook.pushNotificationListener = new DesignerPushNotificationListener(designer) {
             @Override
             public void receiveNotification(JsonObject message) {
                 browserStateManager.captureState();
