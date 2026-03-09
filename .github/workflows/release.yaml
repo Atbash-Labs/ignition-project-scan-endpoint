@@ -3,7 +3,7 @@ name: Build and Release Module (8.1)
 on:
   push:
     tags:
-      - 'v*-8.1'
+      - 'v*'
 
 permissions:
   contents: write
@@ -24,8 +24,7 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
-          RAW="${GITHUB_REF_NAME#v}"
-          echo "VERSION=${RAW%-8.1}" >> "$GITHUB_OUTPUT"
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Generate signing keystore and certificate
         run: |
@@ -63,6 +62,6 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: v${{ steps.version.outputs.VERSION }} (Ignition 8.1)
+          name: v${{ steps.version.outputs.VERSION }}
           generate_release_notes: true
           files: build/Project-Scan-Endpoint.modl
