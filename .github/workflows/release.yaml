@@ -23,7 +23,9 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          RAW="${GITHUB_REF_NAME#v}"
+          echo "VERSION=${RAW%-8.1}" >> "$GITHUB_OUTPUT"
 
       - name: Generate signing keystore and certificate
         run: |
