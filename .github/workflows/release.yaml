@@ -1,47 +1,66 @@
-name: Publish new version upon tag commit
+name: Build and Release Module (8.1)
+
 on:
   push:
     tags:
-      - '[0-9].[0-9].[0-9]'
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to build and release'
-        required: true
+      - 'v*-8.1'
+
+permissions:
+  contents: write
 
 jobs:
   build:
-    name: Build & Release
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: 11
-          cache: 'gradle'
-      - name: Deserialize signing certs
+          distribution: temurin
+          java-version: '11'
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate signing keystore and certificate
         run: |
-          echo "${{ secrets.CODE_SIGNING_CERT_BASE64 }}" | base64 --decode > cert.crt
-          echo "${{ secrets.CODE_SIGNING_KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
-      - name: Build & create signed module
-        run: >
-          ./gradlew
-          -Pversion=${{ github.event.inputs.tag || github.ref_name }}
-          -PsignModule=true
-          build
-          signModule 
-          --certFile=cert.crt
-          --certPassword="${{ secrets.CODE_SIGNING_CERT_PASSWORD }}"
-          --keystoreFile=keystore.jks
-          --keystorePassword="${{ secrets.CODE_SIGNING_KEYSTORE_PASSWORD }}"
-          --certAlias="${{ secrets.CODE_SIGNING_CERT_ALIAS }}"
-      - name: Create release
-        uses: marvinpinto/action-automatic-releases@latest
+          keytool -genkeypair \
+            -alias selfsigned \
+            -keyalg RSA -keysize 2048 \
+            -validity 3650 \
+            -keystore signing.jks \
+            -storepass changeit \
+            -keypass changeit \
+            -dname "CN=Atbash Labs, OU=Dev, O=Atbash Labs, L=Unknown, ST=Unknown, C=US"
+          keytool -exportcert \
+            -alias selfsigned \
+            -keystore signing.jks \
+            -storepass changeit \
+            -file signing.crt
+
+      - name: Create gradle.properties
+        run: |
+          cat > gradle.properties << 'EOF'
+          version=${{ steps.version.outputs.VERSION }}
+          signModule=true
+          ignition.signing.keystoreFile=signing.jks
+          ignition.signing.keystorePassword=changeit
+          ignition.signing.certFile=signing.crt
+          ignition.signing.certAlias=selfsigned
+          ignition.signing.certPassword=changeit
+          EOF
+
+      - name: Build module
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ github.event.inputs.tag || github.ref_name }}
-          prerelease: false
-          files: |
-            build/Project-Scan-Endpoint.modl
-            LICENSE.txt
+          name: v${{ steps.version.outputs.VERSION }} (Ignition 8.1)
+          generate_release_notes: true
+          files: build/Project-Scan-Endpoint.modl

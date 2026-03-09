@@ -1,5 +1,11 @@
 package com.bwdesigngroup.ignition.project_scan.designer;
 
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Window;
+import javax.swing.JButton;
+import javax.swing.SwingUtilities;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,6 +14,7 @@ import com.inductiveautomation.ignition.common.gson.JsonObject;
 import com.inductiveautomation.ignition.common.gson.Gson;
 import com.inductiveautomation.ignition.client.gateway_interface.FilteredPushNotificationListener;
 import com.inductiveautomation.ignition.designer.IgnitionDesigner;
+import com.inductiveautomation.ignition.designer.project.ConflictResolutionDialog;
 import com.bwdesigngroup.ignition.project_scan.designer.dialog.ConfirmationDialog;
 import com.bwdesigngroup.ignition.project_scan.common.ProjectScanConstants;
 
@@ -62,7 +69,8 @@ public class DesignerPushNotificationListener extends FilteredPushNotificationLi
 
         try {
             if (pendingForceUpdate) {
-                logger.debug("Performing force update");
+                logger.debug("Performing force update — will auto-accept gateway conflicts");
+                startConflictDialogWatcher();
                 this.designer.updateProject();
             } else {
                 if (showDialog()) {
@@ -74,6 +82,63 @@ public class DesignerPushNotificationListener extends FilteredPushNotificationLi
             isDialogShowing = false;
             pendingForceUpdate = false;
         }
+    }
+
+    /**
+     * Spawns a background thread that watches for Ignition's
+     * ConflictResolutionDialog. When detected, it clicks
+     * "Gateway" (use all from gateway) then "Apply".
+     */
+    private void startConflictDialogWatcher() {
+        Thread watcher = new Thread(() -> {
+            try {
+                for (int i = 0; i < 100; i++) {
+                    Thread.sleep(100);
+                    Window[] windows = Window.getWindows();
+                    for (Window w : windows) {
+                        if (w instanceof ConflictResolutionDialog && w.isShowing()) {
+                            logger.info("ConflictResolutionDialog detected, auto-resolving with Gateway");
+                            SwingUtilities.invokeLater(() -> autoResolveConflictDialog((ConflictResolutionDialog) w));
+                            return;
+                        }
+                    }
+                }
+                logger.debug("No ConflictResolutionDialog appeared (no conflicts)");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }, "conflict-dialog-watcher");
+        watcher.setDaemon(true);
+        watcher.start();
+    }
+
+    private void autoResolveConflictDialog(ConflictResolutionDialog dialog) {
+        JButton gatewayBtn = findButtonByText(dialog, "Gateway");
+        if (gatewayBtn != null) {
+            logger.debug("Clicking 'Gateway' button");
+            gatewayBtn.doClick();
+        }
+
+        JButton applyBtn = findButtonByText(dialog, "Apply");
+        if (applyBtn != null) {
+            logger.debug("Clicking 'Apply' button");
+            applyBtn.doClick();
+        } else {
+            logger.warn("Could not find 'Apply' button in ConflictResolutionDialog");
+        }
+    }
+
+    private JButton findButtonByText(Container container, String text) {
+        for (Component c : container.getComponents()) {
+            if (c instanceof JButton && text.equals(((JButton) c).getText())) {
+                return (JButton) c;
+            }
+            if (c instanceof Container) {
+                JButton found = findButtonByText((Container) c, text);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 
     private Boolean showDialog() {
