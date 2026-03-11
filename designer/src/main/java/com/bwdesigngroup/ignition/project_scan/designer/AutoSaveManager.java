@@ -122,7 +122,9 @@ public class AutoSaveManager {
             return false;
         }
         String lower = value.toLowerCase().trim();
-        return lower.equals("save") || lower.equals("save project");
+        return lower.equals("save")
+            || lower.equals("save project")
+            || lower.startsWith("save all outstanding project changes");
     }
 
     private JMenuItem findSaveMenuItem() {
