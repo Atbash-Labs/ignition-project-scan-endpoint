@@ -20,6 +20,7 @@ import com.inductiveautomation.ignition.common.gson.JsonObject;
 import com.bwdesigngroup.ignition.project_scan.common.ProjectScanConstants;
 import com.bwdesigngroup.ignition.project_scan.designer.actions.ProjectScanAction;
 import com.bwdesigngroup.ignition.project_scan.designer.browser.ProjectBrowserStateManager;
+import com.bwdesigngroup.ignition.project_scan.designer.web.DesignerDirtyStateServer;
 
 public class ProjectScanEndpointDesignerHook extends AbstractDesignerModuleHook {
     private final Logger logger = LoggerFactory.getLogger("project-scan.Designer");
@@ -28,6 +29,7 @@ public class ProjectScanEndpointDesignerHook extends AbstractDesignerModuleHook 
     public static DesignerPushNotificationListener pushNotificationListener;
     public static IgnitionDesigner designer;
     public static ProjectBrowserStateManager browserStateManager;
+    private DesignerDirtyStateServer dirtyStateServer;
 
 
     @Override
@@ -60,6 +62,9 @@ public class ProjectScanEndpointDesignerHook extends AbstractDesignerModuleHook 
             pushNotificationListener,
             new JsonObjectDeserializer()
         );
+
+        dirtyStateServer = new DesignerDirtyStateServer(context);
+        dirtyStateServer.start();
     }
 
     @Override
@@ -87,6 +92,7 @@ public class ProjectScanEndpointDesignerHook extends AbstractDesignerModuleHook 
     @Override
     public void shutdown() {
         logger.info("Shutting down Project Scan Designer Module");
+        dirtyStateServer.stop();
         gatewayConnection.removePushNotificationListener(pushNotificationListener);
     }
 }
