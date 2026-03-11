@@ -28,6 +28,7 @@ public class ProjectScanEndpointDesignerHook extends AbstractDesignerModuleHook 
     public static DesignerPushNotificationListener pushNotificationListener;
     public static IgnitionDesigner designer;
     public static ProjectBrowserStateManager browserStateManager;
+    private AutoSaveManager autoSaveManager;
 
 
     @Override
@@ -60,6 +61,9 @@ public class ProjectScanEndpointDesignerHook extends AbstractDesignerModuleHook 
             pushNotificationListener,
             new JsonObjectDeserializer()
         );
+
+        autoSaveManager = new AutoSaveManager(designer);
+        autoSaveManager.start();
     }
 
     @Override
@@ -87,6 +91,9 @@ public class ProjectScanEndpointDesignerHook extends AbstractDesignerModuleHook 
     @Override
     public void shutdown() {
         logger.info("Shutting down Project Scan Designer Module");
+        if (autoSaveManager != null) {
+            autoSaveManager.stop();
+        }
         gatewayConnection.removePushNotificationListener(pushNotificationListener);
     }
 }
